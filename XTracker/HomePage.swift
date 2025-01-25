@@ -8,62 +8,74 @@
 
 import SwiftUI
 import SwiftData
+import Charts
 
 struct HomePage: View {
+    
     @Environment(\.modelContext) var context
-    @Query(sort: \Transaction.date) var transactions: [Transaction]
+    @Query(sort: \TransactionModel.date) var transactions: [TransactionModel]
+    
+    @Query(sort: \ProfileModel.firstName) var profile: [ProfileModel]
+    
+    
 
     var body: some View {
         NavigationView {
-            VStack(spacing: 25) {
-                Spacer()
-                
-                if !transactions.isEmpty {
-                    VStack(alignment: .leading, spacing: 6) {
-                        ForEach(transactions) { transaction in
-                            VStack(alignment: .leading) {
-                                Text(transaction.title)
-                                    .font(.headline)
-                                Text(transaction.date, style: .date)
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                                Text("$\(transaction.amount, specifier: "%.2f")")
-                                    .font(.body)
-                                    .foregroundColor(.green)
-                            }
-                        }
+            ScrollView {
+                VStack(spacing: 25) {
+                    if !transactions.isEmpty {
+                        //MARK: - Charts
+                        TransactionsChartView()
+                        //MARK: - RecentTransaction List
+                        RecentTransactionList()
                     }
-                } else {
-                    Image(systemName: "banknote")
-                        .font(.system(size: 30))
-                    Text("You have no expenses this month!")
-                        .font(.headline)
-                        .foregroundColor(Color.primary)
-                    Text("Add Transactions by tapping the + button below")
-                        .font(.subheadline)
-                        .foregroundColor(Color.primary)
+                    else {
+                        Spacer(minLength: 200)
+                        
+                        VStack(spacing: 25) {
+                            Image(systemName: "banknote")
+                                .font(.system(size: 30))
+                            Text("You have no expenses this month!")
+                                .font(.headline)
+                                .foregroundColor(Color.primary)
+                            Text("Add Transactions by tapping the + button below")
+                                .font(.subheadline)
+                                .foregroundColor(Color.primary)
+                        }
+                        .multilineTextAlignment(.center)
+                        
+                        Spacer()
+                    }
+                   
+
                 }
-                
-                Spacer()
             }
-            .multilineTextAlignment(.center)
+        
             .padding(.horizontal)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Text("✌🏿 Hey Abdul!")
-                        .font(.title2)
+                    if let userProfile = profile.first {
+                               Text("✌🏿 Hey \(userProfile.firstName)!")
+                                   .font(.title2)
+                           } else {
+                               Text("✌🏿 Hey!")
+                                   .font(.title2)
+                           }
+
                 }
-                
+
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    HStack(spacing: 20) {
-                        Image(systemName: "magnifyingglass")
-                            .symbolRenderingMode(.palette)
-                            .foregroundStyle(Color.primary)
-                        
-                        Image(systemName: "bell.badge")
-                            .symbolRenderingMode(.palette)
-                            .foregroundStyle(Color.primary)
+                        NavigationLink(destination: AudioExpenseAdderView()) {
+                            Image(systemName: "mic.fill")
+                                .symbolRenderingMode(.palette)
+                                .foregroundStyle(Color.primary)
+                        }
                     }
+                    
+                    // Bell badge icon
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Image(systemName: "bell.badge")
+                        .symbolRenderingMode(.palette)
                 }
             }
         }
@@ -74,9 +86,9 @@ struct HomePage: View {
             print("Number of transactions: \(transactions.count)")
             transactions.forEach { print($0) }
         }
-
     }
 }
+
 
 
 struct HomePage_Previews: PreviewProvider {
@@ -84,7 +96,7 @@ struct HomePage_Previews: PreviewProvider {
         Group {
             HomePage()
                 .preferredColorScheme(.light)
-            
+
             HomePage()
                 .preferredColorScheme(.dark)
         }

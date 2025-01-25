@@ -9,13 +9,24 @@ import Foundation
 import SwiftData
 
 @Model
-class Transaction: Identifiable {
+class TransactionModel: Identifiable {
     var title: String
     var desc: String
-    var date: Date
     var amount: Double
     var selectedCategory: Category
-    
+    var date: Date // Make this the stored property
+
+    var dateString: String { // Make this computed
+        get {
+            date.formatted(.dateTime.year().month().day())
+        }
+        set {
+            if let newDate = DateFormatter.numericUSA.date(from: newValue) {
+                date = newDate
+            }
+        }
+    }
+
     init(title: String, desc: String, date: Date, amount: Double, selectedCategory: Category) {
         self.title = title
         self.desc = desc
@@ -23,5 +34,6 @@ class Transaction: Identifiable {
         self.amount = amount
         self.selectedCategory = selectedCategory
     }
-    
 }
+
+

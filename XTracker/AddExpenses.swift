@@ -16,11 +16,12 @@ struct AddExpenses: View {
     @State private var title: String = ""
     @State private var desc: String = ""
     @State private var amount: Double = 0
-    @State private var selectedCategory: Category = CategoryList.categories.first!
+    @State private var selectedCategory: Category = CategoryList.categories.first ?? Category(name: "Default", imagename: "default", detail: "Default category")
+
     @State private var date: Date = .now
 
     var categories: [Category] = CategoryList.categories
-    @Query(sort: \Transaction.date) var transactions: [Transaction]
+    @Query(sort: \TransactionModel.date) var transactions: [TransactionModel]
     
     var body: some View {
         NavigationView {
@@ -35,9 +36,10 @@ struct AddExpenses: View {
                     }
                     
                     Section("Amount") {
-                        TextField("💰", value: $amount, format: .currency(code: "USD"))
+                        TextField("Amount 💰", value: $amount, formatter: NumberFormatter.currency)
                             .keyboardType(.decimalPad)
                     }
+
                     
                     Section("Category") {
                         Picker("Select Category", selection: $selectedCategory) {
@@ -68,7 +70,7 @@ struct AddExpenses: View {
                     
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button("Save") {
-                            let transaction = Transaction(
+                            let transaction = TransactionModel(
                                 title: title,
                                 desc: desc,
                                 date: date,

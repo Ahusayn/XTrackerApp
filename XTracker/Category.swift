@@ -8,20 +8,32 @@
 import SwiftData
 import SwiftUI
 
+
 @Model
-class Category: Identifiable {
-     var id: UUID
-     var name: String
-     var imagename: String
-     var detail: String
+class Category: Identifiable, Equatable, Hashable {
+    var id: String
+    var name: String
+    var imagename: String
+    var detail: String
 
     init(name: String, imagename: String, detail: String) {
-        self.id = UUID()
+        self.id = UUID().uuidString
         self.name = name
         self.imagename = imagename
         self.detail = detail
     }
+    
+    // Equatable conformance
+    static func == (lhs: Category, rhs: Category) -> Bool {
+        return lhs.id == rhs.id
+    }
+    
+    // Hashable conformance
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
 }
+
 
 struct CategoryList {
     

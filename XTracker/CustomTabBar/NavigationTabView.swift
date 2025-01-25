@@ -23,7 +23,7 @@ struct NavigationTabView: View {
                     }
 
                 // MARK: - Transactions Page
-                TransactionsPage()
+                CategorizeTransactions()
                     .tabItem {
                         Label("Transactions", systemImage: "text.document.fill")
                     }
