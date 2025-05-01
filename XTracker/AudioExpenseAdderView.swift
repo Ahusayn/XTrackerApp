@@ -16,7 +16,10 @@ struct ErrorWrapper: Identifiable {
 }
 
 struct AudioExpenseAdderView: View {
-    @Environment(\.modelContext) private var context // Access ModelContext from the environment
+    
+    @Environment(\.modelContext) private var context
+    @Environment(\.dismiss) var dismiss
+
     @StateObject private var viewModel = AudioExpenseAdderViewModel()
     @State private var errorMessage: ErrorWrapper? // To show error messages
     @State private var isProcessing = false // To show a loading indicator during processing
@@ -41,28 +44,35 @@ struct AudioExpenseAdderView: View {
                     ProgressView("Processing your input...")
                         .progressViewStyle(CircularProgressViewStyle())
                 } else {
-                    Text(viewModel.recognizedText.isEmpty ? "Tap the mic to start recording" : viewModel.recognizedText)
-                        .font(.headline)
-                        .foregroundColor(Color.primary)
-                        .multilineTextAlignment(.center)
-                        .padding()
+                    VStack {
+                        Text(viewModel.recognizedText.isEmpty ? "Tap the mic to start recording" : viewModel.recognizedText)
+                            .font(.headline)
+                            .foregroundColor(Color.primary)
+                            .multilineTextAlignment(.center)
+                            .padding()
+                    }
+                    .padding()
+                    .background(Color.gray.opacity(0.3))
+                    .cornerRadius(8)
+                    
                 }
 
                 // Add Expense Button
-                Button(action: parseExpense) {
-                    Text("Add Expense")
-                        .font(.headline)
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(8)
-                }
-                .disabled(viewModel.recognizedText.isEmpty || isProcessing)
+                    Button(action: parseExpense) {
+                        Text("Add Expense")
+                            .font(.headline)
+                            .padding()
+                            .frame(width: .infinity, height: .infinity)
+                            .background(Color.brown.opacity(0.5))
+                            .foregroundColor(.black)
+                            .cornerRadius(8)
+                        
+                    }
+                    .disabled(viewModel.recognizedText.isEmpty || isProcessing)
+                
+               
             }
             .padding()
-            .navigationTitle("Add Expense by Voice")
-            .navigationBarTitleDisplayMode(.inline)
             .alert(item: $errorMessage) { error in
                 Alert(
                     title: Text("Error"),
@@ -148,15 +158,15 @@ struct AudioExpenseAdderView: View {
         // Match to existing categories or default
         let selectedCategory = CategoryList.categories.first { $0.name.lowercased() == expenseCategory.lowercased() } ?? CategoryList.categories.first!
 
-        let transaction = TransactionModel(
-            title: expenseTitle,
-            desc: expenseCategory,
-            date: expenseDate ?? Date(),
-            amount: expenseAmount,
-            selectedCategory: selectedCategory
-        )
-
-        saveTransaction(transaction)
+////        let transaction = TransactionModel(
+////            comment: expenseComment,
+////            desc: expenseCategory,
+////            date: expenseDate ?? Date(),
+////            amount: expenseAmount,
+////            selectedCategory: selectedCategory
+////        )
+//
+//        saveTransaction(transaction)
     }
 
     // Date Parsing Function
@@ -188,6 +198,7 @@ struct AudioExpenseAdderView: View {
             try context.save()  // Explicitly save the context
             print("Transaction saved successfully")
             isProcessing = false
+            dismiss()
         } catch {
             errorMessage = ErrorWrapper(message: "Error saving transaction: \(error.localizedDescription)")
             isProcessing = false
@@ -195,6 +206,15 @@ struct AudioExpenseAdderView: View {
     }
 }
 
-#Preview {
-    AudioExpenseAdderView()
+struct AudioExpenseAdderView_Previews: PreviewProvider {
+    static var previews: some View {
+        Group {
+            AudioExpenseAdderView()
+                .preferredColorScheme(.light)
+            
+            AudioExpenseAdderView()
+                .preferredColorScheme(.dark)
+        }
+    }
 }
+

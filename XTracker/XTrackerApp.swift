@@ -13,7 +13,7 @@ struct XTrackerApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .modelContainer(for: [TransactionModel.self, Category.self])
+                .modelContainer(for: [TransactionModel.self, Category.self, AccountModel.self, ProfileModel.self])
         }
     }
 }

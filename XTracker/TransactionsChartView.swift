@@ -18,6 +18,10 @@ struct TransactionsChartView: View {
     @State private var selectedYear: Int = Calendar.current.component(.year, from: Date())
     private let availableYears: [Int] = Array(2000...Calendar.current.component(.year, from: Date()))
     
+    var selectedType: SelectedSpendType = .expense
+    
+   
+    
     // Generate monthly data for the selected year
     var monthlyData: [MonthData] {
         let calendar = Calendar.current

@@ -8,6 +8,5 @@
 import SwiftUI
 import SwiftData
 
-var transactionPreviewData = TransactionModel(title: "Balling", desc: "Trip to bursa", date: Date()
-                                              , amount: 500.50, selectedCategory: CategoryList.categories.first {$0.name == "Vacation"}!)
+var transactionPreviewData = TransactionModel(comment: "McDonalds", date: Date(), amount: 49.99, selectedCategory: CategoryList.categories.first {$0.name == "Food"}!)
 

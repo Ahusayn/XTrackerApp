@@ -19,41 +19,47 @@ struct NavigationTabView: View {
                 // MARK: - Home Page
                 HomePage()
                     .tabItem {
-                        Label("Home", systemImage: "house.fill")
+                        Label("", systemImage: "clock.fill")
+                            .foregroundStyle(Color.text)
                     }
 
                 // MARK: - Transactions Page
-                CategorizeTransactions()
+//                CategorizeTransactions()
                     .tabItem {
-                        Label("Transactions", systemImage: "text.document.fill")
+                        Label("", systemImage: "chart.pie.fill")
+                            .foregroundStyle(Color.text)
                     }
 
-                // MARK: - Add Expenses Tab
-                Color.clear // Placeholder for Add Expense tab
-                    .onAppear {
-                        inputExpense = true
-                    }
-                    .tabItem {
-                        Label("", systemImage: "plus")
-                    }
+//                // MARK: - Add Expenses Tab
+//                Color.clear // Placeholder for Add Expense tab
+//                    .onAppear {
+//                        inputExpense = true
+//                    }
+//                    .tabItem {
+//                        Label("", systemImage: "plus")
+//                    }
 
                 // MARK: - Categories Page
                 CategoriesPage()
                     .tabItem {
-                        Label("Categories", systemImage: "square.stack.fill")
+                        Label("", systemImage: "square.stack.fill")
+                            .foregroundStyle(Color.text)
+
                     }
 
                 // MARK: - Profile Page
                 ProfilePage()
                     .tabItem {
-                        Label("Profile", systemImage: "person.circle.fill")
+                        Label("", systemImage: "gear")
+                            .foregroundStyle(Color.text)
+
                     }
             }
-            .sheet(isPresented: $inputExpense) {
-                AddExpenses()
-                    .background(Color.black.edgesIgnoringSafeArea(.all))
-                   
-            }
+//            .sheet(isPresented: $inputExpense) {
+//                AddExpensesInput()
+//                    .background(Color.black.edgesIgnoringSafeArea(.all))
+//                   
+//            }
             .navigationBarHidden(true) // Hide navigation bar
         }
     }

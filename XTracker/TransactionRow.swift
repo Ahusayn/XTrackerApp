@@ -25,7 +25,7 @@ struct TransactionRow: View {
             
             VStack(alignment: .leading, spacing: 5) {
                 //MARK: - Transaction Merchant
-                Text(transaction.title)
+                Text(transaction.comment)
                     .font(.subheadline)
                     .bold()
                     .lineLimit(1)
@@ -57,11 +57,11 @@ struct TransactionRow: View {
             showEditandDelete = true
         }
         
-        .sheet(isPresented: $showEditandDelete) {
-            EditandDeleteExpensesView(transaction: transaction)
-                .presentationDetents([.medium, .large])
-                .presentationDragIndicator(.hidden)
-        }
+//        .sheet(isPresented: $showEditandDelete) {
+//            EditandDeleteExpensesView(transaction: transaction)
+//                .presentationDetents([.medium, .large])
+//                .presentationDragIndicator(.hidden)
+//        }
         
         
         .padding([.top, .bottom], 8)

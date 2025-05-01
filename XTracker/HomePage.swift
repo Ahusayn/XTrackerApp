@@ -12,22 +12,43 @@ import Charts
 
 struct HomePage: View {
     
+    
     @Environment(\.modelContext) var context
     @Query(sort: \TransactionModel.date) var transactions: [TransactionModel]
+
     
     @Query(sort: \ProfileModel.firstName) var profile: [ProfileModel]
+    
+    @State private var isAddEpenseSelecttionView = false
+    @State private var isAddTransactionManually = false
+    
+    @State private var selectedSide: SelectedSpendType = .expense
+    
+    var filteredTransactions: [TransactionModel] {
+        transactions.filter { $0.type == selectedSide }
+    }
     
     
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
                 VStack(spacing: 25) {
+                    
+                    Picker("", selection: $selectedSide) {
+                        ForEach(SelectedSpendType.allCases, id: \.self) {
+                            Text($0.rawValue)
+                        }
+                    }
+                    .pickerStyle(SegmentedPickerStyle())
+                    .frame(width: 200)
+                    .padding()
+                    
                     if !transactions.isEmpty {
                         //MARK: - Charts
-                        TransactionsChartView()
+                        TransactionsChartView(selectedType: selectedSide)
                         //MARK: - RecentTransaction List
-                        RecentTransactionList()
+                        RecentTransactionList(selectedType: selectedSide)
                     }
                     else {
                         Spacer(minLength: 200)
@@ -35,7 +56,7 @@ struct HomePage: View {
                         VStack(spacing: 25) {
                             Image(systemName: "banknote")
                                 .font(.system(size: 30))
-                            Text("You have no expenses this month!")
+                            Text("You have no transactions this month!")
                                 .font(.headline)
                                 .foregroundColor(Color.primary)
                             Text("Add Transactions by tapping the + button below")
@@ -50,32 +71,49 @@ struct HomePage: View {
 
                 }
             }
+            
+            
+            
+            .sheet(isPresented: $isAddTransactionManually){
+                AddTransactionsManually()
+                
+            }
+            
+            
         
             .padding(.horizontal)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    if let userProfile = profile.first {
-                               Text("✌🏿 Hey \(userProfile.firstName)!")
-                                   .font(.title2)
-                           } else {
-                               Text("✌🏿 Hey!")
-                                   .font(.title2)
-                           }
-
-                }
+//                ToolbarItem(placement: .navigationBarLeading) {
+//                    if let userProfile = profile.first {
+//                               Text("✌🏿 Hey \(userProfile.firstName)!")
+//                                   .font(.title2)
+//                           } else {
+//                               Text("✌🏿 Hey!")
+//                                   .font(.title2)
+//                           }
+//
+//                }
 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                        NavigationLink(destination: AudioExpenseAdderView()) {
-                            Image(systemName: "mic.fill")
-                                .symbolRenderingMode(.palette)
-                                .foregroundStyle(Color.primary)
-                        }
+                       Button  {
+                           isAddTransactionManually = true
+                       } label: {
+                           Image(systemName: "plus")
+                               .symbolRenderingMode(.palette)
+                               .foregroundStyle(Color.text)
+                       }
                     }
                     
                     // Bell badge icon
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Image(systemName: "bell.badge")
-                        .symbolRenderingMode(.palette)
+                    Button {
+                        print("Filter Tapped")
+                    } label: {
+                        Image(systemName: "line.3.horizontal.decrease")
+                            .symbolRenderingMode(.palette)
+                            .foregroundStyle(Color.text)
+                    }
+                  
                 }
             }
         }
@@ -88,6 +126,10 @@ struct HomePage: View {
         }
     }
 }
+
+
+
+
 
 
 

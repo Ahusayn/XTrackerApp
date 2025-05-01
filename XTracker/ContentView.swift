@@ -45,7 +45,7 @@ struct ContentView: View {
                                 .font(.system(size: 30, weight: .bold))
                                 .foregroundColor(.white)
                                 .padding()
-                                .background(Color.button)
+                                .background(Color.brown)
                                 .cornerRadius(15)
                         }
                         
