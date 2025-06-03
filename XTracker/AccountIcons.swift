@@ -1,117 +1,106 @@
-//
-//  AccountIcons.swift
-//  XTracker
-//
-//  Created by HSSN on 27/03/2025.
-//
-
 import SwiftUI
 import SwiftData
 
 struct AccountIcons: View {
-    
     @Environment(\.modelContext) var context
     @Environment(\.dismiss) var dismiss
-    var accounts: [AccountModel] = AccountList.paymentType
-    @Binding var selectedAccounts: AccountModel
-    let columns =  [ GridItem(.adaptive(minimum: 90), spacing: 30)
-        
-    ]
+
+    @Query(sort: \AccountModel.name) var savedAccounts: [AccountModel]
+    @Query var transactions: [TransactionModel]
+
+    @Binding var selectedAccounts: AccountModel?
+
+    let columns = [GridItem(.adaptive(minimum: 90), spacing: 30)]
+    @State private var isAccountsPresented = false
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
-                LazyVGrid(columns: columns, spacing: 5) {
-                    if !accounts.isEmpty {
-                        ForEach(accounts, id: \.self) { account in
-                            HStack {
-                                Button {
-                                    selectedAccounts = account
-                                    dismiss()
-                                    
-                                } label: {
-                                    VStack(spacing: 12) {
-                                        Image(account.imageName)
-                                            .resizable()
-                                            .scaledToFit()
-                                            .frame(width: 30, height: 30)
-                                        Text(account.name)
-                                            .font(.system(size: 15, weight: .medium))
-                                            .foregroundStyle(Color.text)
-                                    }
+           
+                LazyVGrid(columns: columns, spacing: 20) {
+                    ForEach(savedAccounts, id: \.id) { account in
+                        Button {
+                            selectedAccounts = account
+                            dismiss()
+                        } label: {
+                            VStack(spacing: 12) {
+                                if account.imageName.containsOnlyEmoji {
+                                    Text(account.imageName)
+                                        .font(.system(size: 30))
+                                        .frame(width: 40, height: 40)
+                                } else {
+                                    Image(account.imageName)
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 40, height: 40)
                                 }
+
+                                Text(account.name)
+                                    .font(.system(size: 15, weight: .medium))
+                                    .foregroundColor(Color.primary)
+                                    .lineLimit(1)
                             }
-                            
+                            .padding(8)
+                           
                         }
-                        
-                        if accounts.count == 1 && accounts.first?.name == "Cash" {
-                            HStack {
-                                Button {
-                                    
-                                } label: {
-                                    VStack(spacing: 12) {
-                                        Image(systemName: "plus.circle")
-                                            .resizable()
-                                            .scaledToFit()
-                                            .frame(width: 30, height: 30)
-                                            .foregroundStyle(Color.text)
-                                        Text("Add")
-                                            .font(.system(size: 15, weight: .medium))
-                                            .foregroundStyle(Color.text)
-                                    }
-                                }
-                            }
-                        }
-                        
-                    } else {
+                    }
+
+                    // Always show "Add" button
+                    Button {
+                        isAccountsPresented = true
+                    } label: {
                         VStack(spacing: 12) {
                             Image(systemName: "plus.circle")
                                 .resizable()
                                 .scaledToFit()
                                 .frame(width: 40, height: 40)
-                            
                             Text("Add")
-                                .foregroundStyle(Color.text)
                                 .font(.system(size: 15, weight: .medium))
-                            
+                                .foregroundColor(Color.primary)
                         }
+                        .padding(8)
+                        
                     }
-                   
                 }
                 .padding()
-                    
-                            
-                            
-
-                }
-                .navigationTitle("Accounts")
-                .navigationBarTitleDisplayMode(.inline)
+            }
+            .background(Color.background.ignoresSafeArea())
+            .navigationTitle("Accounts")
+            .navigationBarTitleDisplayMode(.inline)
+        }
+        .sheet(isPresented: $isAccountsPresented, onDismiss: {
+            // No need to manually fetch — @Query updates automatically
+        }) {
+            CreateAccounts()
+        }
+        .onAppear {
+            print("Loaded Accounts: \(savedAccounts.count)")
+            for account in savedAccounts {
+                let actualBalance = balance(for: account)
+                print("\(account.name): \(account.balance) | Actual Balance: \(actualBalance)")
             }
         }
-    
-      
     }
 
-
-
-
-
-struct AccountIcons_Previews: PreviewProvider {
-    
-    @State static private var previewAccounts = AccountList.paymentType.first!
-    
-    static var previews: some View {
-        
-            
-            AccountIcons(selectedAccounts: $previewAccounts)
-                .preferredColorScheme(.light)
-            
-          
+    func balance(for account: AccountModel) -> Double {
+        transactions
+            .filter { $0.account?.id == account.id }
+            .reduce(0.0) { $0 + ($1.type == .income ? $1.amount : -$1.amount) }
     }
-    
 }
 
+// MARK: - Preview
+struct AccountIcons_Previews: PreviewProvider {
+    // Use optional so you can pass nil or a dummy without inserting into context
+    @State static private var previewAccount: AccountModel? = nil
 
-//#Preview {
-//    AccountIcons()
-//}
+    static var previews: some View {
+        Group {
+            AccountIcons(selectedAccounts: $previewAccount)
+                .preferredColorScheme(.light)
+
+            AccountIcons(selectedAccounts: $previewAccount)
+                .preferredColorScheme(.dark)
+        }
+    }
+}

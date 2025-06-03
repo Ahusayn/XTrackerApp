@@ -2,19 +2,11 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>AppName</key>
-    <string>XTracker</string>
-    <key>Version</key>
-    <string>1.0</string>
-    <key>Author</key>
-    <string>HSSN</string>
-
-    <!-- Permission for Speech Recognition -->
-    <key>NSSpeechRecognitionUsageDescription</key>
-    <string>We need access to speech recognition to allow you to add expenses by voice.</string>
-
-    <!-- Permission for Microphone Access -->
-    <key>NSMicrophoneUsageDescription</key>
-    <string>We need access to your microphone to record audio for expense tracking.</string>
+	<key>AppName</key>
+	<string>XTracker</string>
+	<key>Author</key>
+	<string>HSSN</string>
+	<key>Version</key>
+	<string>1.0</string>
 </dict>
 </plist>

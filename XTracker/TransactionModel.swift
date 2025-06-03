@@ -9,14 +9,19 @@
 import Foundation
 import SwiftData
 
+enum Recurrence: String, Codable {
+    case never, daily, weekly, monthly, yearly
+}
+
 @Model
 class TransactionModel: Identifiable {
     var comment: String
     var amount: Double
+    var recurrence: Recurrence
     var selectedCategory: Category
     var date: Date
     var paymentType: String // "Cash" or "Account"
-    var account: AccountModel? // Optional account (only used if paymentType == "Account")
+    @Relationship var account: AccountModel?  // Must be linked properly
     var type: SelectedSpendType
 
     var dateString: String {
@@ -30,13 +35,15 @@ class TransactionModel: Identifiable {
         }
     }
 
-    init(comment: String, date: Date, amount: Double, selectedCategory: Category, paymentType: String = "Cash", account: AccountModel? = nil) {
+    init(comment: String, date: Date, amount: Double, recurrence: Recurrence = .never,  selectedCategory: Category, paymentType: String = "Cash", account: AccountModel? = nil) {
         self.comment = comment
         self.date = date
         self.amount = amount
+        self.recurrence = recurrence
         self.selectedCategory = selectedCategory
         self.paymentType = paymentType
         self.account = account
         self.type = selectedCategory.type
+        
     }
 }
