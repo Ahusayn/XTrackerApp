@@ -15,10 +15,39 @@ struct TransactionsChartView: View {
     
     @Query(sort: \TransactionModel.date) var transactions: [TransactionModel]
     
+    var selectedType: SelectedSpendType
+    
+    var selectedFilter: FilterType
+
+    
+    let calendar = Calendar.current
+
+    var filteredTransactions: [TransactionModel] {
+        let filteredByType = transactions.filter { $0.type == selectedType }
+        
+        return filteredByType.filter { transaction in
+            switch selectedFilter {
+            case .daily:
+                return calendar.isDateInToday(transaction.date)
+            case .weekly:
+                return calendar.isDate(transaction.date, equalTo: Date(), toGranularity: .weekOfYear)
+            case .monthly:
+                return calendar.isDate(transaction.date, equalTo: Date(), toGranularity: .month)
+            case .yearly:
+                return calendar.isDate(transaction.date, equalTo: Date(), toGranularity: .year)
+            case .all:
+                return true
+            case .custom(let startDate, let endDate):
+                return transaction.date >= startDate && transaction.date <= endDate
+            }
+        }
+    }
+
+
+    
     @State private var selectedYear: Int = Calendar.current.component(.year, from: Date())
     private let availableYears: [Int] = Array(2000...Calendar.current.component(.year, from: Date()))
     
-    var selectedType: SelectedSpendType = .expense
     
    
     
@@ -32,10 +61,10 @@ struct TransactionsChartView: View {
         }
         
         // Step 2: Sum transactions by month for the selected year
-        for transaction in transactions {
-            let components = calendar.dateComponents([.year, .month], from: transaction.date)
+        for filteredTransaction in filteredTransactions {
+            let components = calendar.dateComponents([.year, .month], from: filteredTransaction.date)
             if components.year == selectedYear, let month = components.month {
-                allMonths[month, default: 0] += transaction.amount
+                allMonths[month, default: 0] += filteredTransaction.amount
             }
         }
         
@@ -49,30 +78,23 @@ struct TransactionsChartView: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading) {
+        VStack(alignment: .leading, spacing: 0) {
             
-            // Year Picker
-            HStack {
-                Text("Year:")
-                    .font(.headline)
-                
-                Picker("Select Year", selection: $selectedYear) {
-                    ForEach(availableYears, id: \.self) { year in
-                        Text(year.description)
-                           
-                    }
-                }
-                .pickerStyle(MenuPickerStyle())
-            }
-            .padding(.bottom, 10)
+          
             
             // Calculate total amount for all months
             let totalAmount = monthlyData.reduce(0) { $0 + $1.totalAmount }
             
-            Text(formatAsCurrency(-totalAmount))
+            
+            Text(formatAsCurrency(selectedType == .expense ?  totalAmount : totalAmount))
                 .font(.title2)
                 .bold()
                 .padding(.bottom, 10)
+            
+            Text(selectedType == .expense ? "spent during this period": "earned during this period")
+                .font(.footnote)
+                .foregroundStyle(Color.gray.opacity(0.9))
+                .padding(.bottom, 20)
 
             
             if !monthlyData.isEmpty {
@@ -123,5 +145,8 @@ struct MonthData: Identifiable {
 }
 
 #Preview {
-    TransactionsChartView()
+    TransactionsChartView(selectedType: .expense, selectedFilter: .monthly)
+
+
+
 }

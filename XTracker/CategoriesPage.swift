@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct CategoriesPage: View {
+struct Accounts: View {
     var categories: [Category] = CategoryList.categories
     
     var body: some View {
@@ -45,5 +45,5 @@ struct CategoriesPage: View {
 
 
 #Preview {
-    CategoriesPage()
+    Accounts()
 }

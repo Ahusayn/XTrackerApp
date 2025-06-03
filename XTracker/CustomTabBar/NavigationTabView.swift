@@ -24,7 +24,7 @@ struct NavigationTabView: View {
                     }
 
                 // MARK: - Transactions Page
-//                CategorizeTransactions()
+                CategorizeTransactions()
                     .tabItem {
                         Label("", systemImage: "chart.pie.fill")
                             .foregroundStyle(Color.text)
@@ -40,7 +40,7 @@ struct NavigationTabView: View {
 //                    }
 
                 // MARK: - Categories Page
-                CategoriesPage()
+                Account()
                     .tabItem {
                         Label("", systemImage: "square.stack.fill")
                             .foregroundStyle(Color.text)
@@ -48,7 +48,7 @@ struct NavigationTabView: View {
                     }
 
                 // MARK: - Profile Page
-                ProfilePage()
+                SettingsPage()
                     .tabItem {
                         Label("", systemImage: "gear")
                             .foregroundStyle(Color.text)

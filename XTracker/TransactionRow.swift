@@ -5,71 +5,88 @@
 //  Created by mac on 25/12/2024.
 //
 
+
+
 import SwiftUI
 
 struct TransactionRow: View {
+    
     var transaction: TransactionModel
     @State private var showEditandDelete = false
-    
+
     var body: some View {
-        HStack(spacing: 20) {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Color.button.opacity(0.3))
-                .frame(width: 44, height: 44)
-                .overlay {
-                    Image(transaction.selectedCategory.imagename)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 44, height: 44)
-                }
+        HStack(spacing: 16) {
             
-            VStack(alignment: .leading, spacing: 5) {
-                //MARK: - Transaction Merchant
+            // MARK: - Category Icon with Background
+            Image(transaction.selectedCategory.imagename)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 24, height: 24)
+                .padding(10)
+                .background(
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(transaction.selectedCategory.tag.opacity(0.2))
+                )
+
+            // MARK: - Title and Payment Type
+            VStack(alignment: .leading, spacing: 4) {
                 Text(transaction.comment)
-                    .font(.subheadline)
-                    .bold()
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.primary)
                     .lineLimit(1)
-                
-                //MARK: - Transaction Category
-                Text(transaction.selectedCategory.name)
-                    .font(.footnote)
-                    .opacity(0.7)
-                    .lineLimit(1)
-                
-                //MARK: - Transaction Date
-                Text(transaction.date, format: .dateTime.year().month().day())
-                    .font(.footnote)
+
+                Text(transaction.paymentType == "Cash" ? "Cash" : (transaction.account?.name ?? "Account"))
+                    .font(.system(size: 13))
                     .foregroundColor(.secondary)
-                
-            
-            
+                    .lineLimit(1)
             }
+
             Spacer()
-             
-            //MARK: - Transaction Amount
-            Text(-transaction.amount, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
-                .bold()
-                .foregroundColor(Color.red)
-            
+
+            // MARK: - Amount
+            Text(transaction.amount,
+                 format: .currency(code: Locale.current.currency?.identifier ?? "NGN"))
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundColor(transaction.type == .expense ? .red : .green)
         }
         
         .onTapGesture {
             showEditandDelete = true
         }
         
-//        .sheet(isPresented: $showEditandDelete) {
-//            EditandDeleteExpensesView(transaction: transaction)
-//                .presentationDetents([.medium, .large])
-//                .presentationDragIndicator(.hidden)
-//        }
+        .sheet(isPresented: $showEditandDelete) {
+            EdittandDeleteSelection(transaction: transaction)
+                .presentationDetents([.fraction(0.2)])
+                .presentationDragIndicator(.visible)
+        }
+        
+             
+        .padding(.horizontal)
+        .padding(.vertical, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 15)
+                .fill(Color(.systemGray6))
+        )
         
         
-        .padding([.top, .bottom], 8)
+
+        
+        
         
     }
 }
 
-#Preview {
-    
-    TransactionRow(transaction: transactionPreviewData)
+
+
+struct Transaction_Previews: PreviewProvider {
+    static var previews: some View {
+        Group {
+            TransactionRow(transaction: transactionPreviewData)
+                .preferredColorScheme(.light)
+
+            TransactionRow(transaction: transactionPreviewData)
+                .preferredColorScheme(.dark)
+        }
+    }
 }
+

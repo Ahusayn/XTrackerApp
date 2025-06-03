@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct ContentView: View {
     
@@ -60,14 +61,21 @@ struct ContentView: View {
                 
             }
         }
+        
        
     }
+    
+   
+
+   
+    
 }
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         Group {
             ContentView( )
+            
                 .preferredColorScheme(.light)
             
             ContentView()

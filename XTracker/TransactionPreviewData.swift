@@ -8,5 +8,7 @@
 import SwiftUI
 import SwiftData
 
-var transactionPreviewData = TransactionModel(comment: "McDonalds", date: Date(), amount: 49.99, selectedCategory: CategoryList.categories.first {$0.name == "Food"}!)
+var transactionPreviewData = TransactionModel(comment: "McDonalds", date: Date(), amount: 49, selectedCategory: CategoryList.categories.first {$0.name == "Food"}!, paymentType: "Hssn" ,account: AccountList.paymentType.first {$0.name == "Cash"})
+
+
 

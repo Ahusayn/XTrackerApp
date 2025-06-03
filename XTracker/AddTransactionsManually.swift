@@ -6,83 +6,74 @@
 //
 
 
+
 import SwiftUI
+import SwiftData
 
 struct AddTransactionsManually: View {
-    
-    @Environment(\.modelContext)  private var context
+    @Environment(\.modelContext) private var context
     @Environment(\.dismiss) var dismiss
 
-   
-    
+    var isEditing: Bool = false
+    var originalTransaction: TransactionModel? = nil
+
     @State private var isSelectAccount = false
     @State private var isSelectCategory = false
+    @State private var showCreateAccount = false
+
     @State private var transactiontype: Bool = true
     @State var amount: String = "0"
     @State var comment: String = ""
     @State var selectedDate = Date()
     @State var showDatePicker = false
     @State var showRecurring = false
-    
+
     @State private var rawAmount: String = ""
     @FocusState private var isAmountFocused: Bool
-    var categories: [Category] =  CategoryList.categories
+
+    var categories: [Category] = CategoryList.categories
     @State private var selectedCategory: Category = CategoryList.categories.first!
-    var accounts: [AccountModel] = AccountList.paymentType
-    @State private var selectedAccounts: AccountModel = AccountList.paymentType.first!
-    
-    
-    
-    
-    
-    
+    @State private var accounts: [AccountModel] = []
+    @State private var selectedAccounts: AccountModel?
+
     var formattedAmount: String {
-        let currencySymbol = Locale.current.currencySymbol ?? "$"
-        
-        if amount.isEmpty {
-            return "\(currencySymbol)0"
-        }
-        
-        return "\(currencySymbol)\(amount)"
+        let currencySymbol = Locale.current.currencySymbol ?? "₺"
+        return amount.isEmpty ? "\(currencySymbol)0" : "\(currencySymbol)\(amount)"
     }
-    
-    
-    
-    
+
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack {
                 Spacer()
-                
-                //MARK: - Account Type & Category
+
+                // MARK: - Account & Category Pickers
                 HStack(spacing: 10) {
                     Button {
                         isSelectAccount = true
                     } label: {
-                        Image(selectedAccounts.imageName)
-                            .resizable()
-                            .scaledToFit()
+                        Text(selectedAccounts?.imageName ?? "💰")
                             .frame(width: 30, height: 30)
-                        Text(selectedAccounts.name)
+
+                        Text(selectedAccounts?.name ?? "Select")
                             .bold()
                             .foregroundStyle(Color.text)
+                            .lineLimit(1)
                         Image(systemName: "chevron.down")
                     }
                     .padding()
                     .frame(maxWidth: .infinity, minHeight: 40)
-                    .foregroundStyle(Color.text)
                     .background(Color.brown.opacity(0.5))
                     .cornerRadius(8)
-                    
+
                     Spacer()
-                    
+
                     Button {
                         isSelectCategory = true
                     } label: {
                         Image(selectedCategory.imagename)
                             .resizable()
                             .scaledToFit()
-                            .frame(width: 30, height:30)
+                            .frame(width: 30, height: 30)
                         Text(selectedCategory.name)
                             .bold()
                             .foregroundStyle(Color.text)
@@ -93,251 +84,95 @@ struct AddTransactionsManually: View {
                     }
                     .padding()
                     .frame(maxWidth: .infinity, minHeight: 40)
-                    .foregroundStyle(Color.text)
                     .background(Color.brown.opacity(0.5))
                     .cornerRadius(8)
                 }
-                .layoutPriority(1)
                 .padding()
-                
-                //                //MARK: - Transaction Type Toggle
-                //                HStack(alignment: .center) {
-                //                    TransactionTypeToggle(isIncome: $transactiontype)
-                //                }
-                //                .padding(.bottom, 10)
-                
-                //MARK: - Amount & Description
-                VStack(alignment: .center) {
-                    Text("\(formattedAmount)")
+
+                // MARK: - Amount & Comment
+                VStack {
+                    Text(formattedAmount)
                         .font(.system(size: 50, weight: .bold, design: .rounded))
                         .foregroundStyle(Color.text)
                         .multilineTextAlignment(.center)
                         .lineLimit(1)
                         .minimumScaleFactor(0.5)
                         .frame(maxHeight: 60)
-                    
-                    
+
                     TextField("Add Transaction Merchant..", text: $comment)
                         .foregroundStyle(Color.text)
                         .multilineTextAlignment(.center)
                 }
                 .padding()
-                
+
+                // MARK: - Custom Keypad
                 CustomKeypadView(
                     amount: $amount,
                     showDatePicker: $showDatePicker,
                     selectedDate: $selectedDate,
                     comment: $comment,
                     selectedCategory: selectedCategory,
-                    selectedAccounts: selectedAccounts,
-                    onSave: { dismiss() } // ✅ fixed
+                    selectedAccounts: selectedAccounts ?? AccountModel(name: "", imageName: "", balance: 0),
+                    isEditing: isEditing,
+                    originalTransaction: originalTransaction,
+                    onSave: { dismiss() }
                 )
-
-
 
             }
             .background(Color.background)
             .ignoresSafeArea(.keyboard)
-            
-            
-            
             .sheet(isPresented: $isSelectAccount) {
-                AccountIcons(selectedAccounts: $selectedAccounts)
-                    .presentationDetents([.fraction(0.5), .large])
-                    .presentationDragIndicator(.hidden)
+                VStack {
+                    AccountIcons(selectedAccounts: $selectedAccounts)
+
+//                    Button(action: {
+//                        showCreateAccount = true
+//                    }) {
+//                        Label("Create New Account", systemImage: "plus.circle")
+//                            .padding()
+//                            .frame(maxWidth: .infinity)
+//                            .background(Color.accentColor.opacity(0.2))
+//                            .cornerRadius(10)
+//                    }
+//                    .padding()
+                }
+                .presentationDetents([.fraction(0.5), .large])
             }
-            
+            .sheet(isPresented: $showCreateAccount, onDismiss: {
+                do {
+                    accounts = try context.fetch(FetchDescriptor<AccountModel>())
+                    if let last = accounts.last {
+                        selectedAccounts = last
+                    }
+                } catch {
+                    print("Error fetching updated accounts: \(error.localizedDescription)")
+                }
+            }) {
+                CreateAccounts()
+            }
             .sheet(isPresented: $isSelectCategory) {
                 CategoryIcons(selectedCategory: $selectedCategory)
                     .presentationDetents([.fraction(0.5), .large])
-                    .presentationDragIndicator(.hidden)
             }
-            
-            
-        }
-    }
-    
-    
-    
-   
-}
-
-
-// MARK: - Custom Keypad
-struct CustomKeypadView: View {
-    @Binding var amount: String
-    @Binding var showDatePicker: Bool
-    @Binding var selectedDate: Date
-    @Binding var comment: String
-    
-    @Environment(\.modelContext) private var context
-
-    var selectedCategory: Category
-    var selectedAccounts: AccountModel
-    var onSave: () -> Void // <-- Add this
-    
-    let options = ["Monthly", "Weekly", "Daily", "Never"]
-    @State private var selectedOption: String = "Never"
-    
-
-    
-
-    let keypads: [[String]] = [
-        ["1", "2", "3", "*"],
-        ["4", "5", "6", "date"],
-        ["7", "8", "9", ""],
-        ["repeat", "0", ".", ""]
-    ]
-
-    var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            VStack(spacing: 12) {
-                ForEach(0..<keypads.count, id: \.self) { rowIndex in
-                    HStack(spacing: 12) {
-                        ForEach(0..<keypads[rowIndex].count, id: \.self) { colIndex in
-                            let key = keypads[rowIndex][colIndex]
-
-                            if (rowIndex == 2 || rowIndex == 3) && colIndex == 3 {
-                                Spacer()
-                                    .frame(width: 80, height: 80)
-                            } else {
-                                keypadButton(for: key)
-                            }
-                        }
+            .onAppear {
+                do {
+                    accounts = try context.fetch(FetchDescriptor<AccountModel>())
+                    if selectedAccounts == nil {
+                        selectedAccounts = accounts.first
                     }
-                }
-            }
-            
-            
-
-            Button(action: {
-                handleInput("add")
-            }) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 40)
-                        .fill(Color.black)
-                        .frame(width: 80, height: (80 * 2 + 12))
-
-                    Image(systemName: "checkmark")
-                        .foregroundColor(.white)
-                        .font(.title)
-                }
-            }
-            .padding(.trailing, 2)
-            .padding(.bottom, 2)
-        }
-        
-        .sheet(isPresented: $showDatePicker) {
-            DatePickerView(selectedDate: $selectedDate)
-                .presentationDetents([.fraction(0.5)])
-        }
-        
-        
-       
-        
-    }
-
-    @ViewBuilder
-    func keypadButton(for key: String) -> some View {
-        Button(action: {
-            handleInput(key)
-        }) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 25)
-                    .fill(Color.gray.opacity(0.3))
-                    .frame(width: 80, height: 80)
-
-                if key == "*" {
-                    Image(systemName: "delete.left")
-                        .foregroundColor(.red)
-                } else if key == "date" {
-                    Image(systemName: "calendar")
-                        .foregroundColor(.blue)
-                } else if key == "repeat" {
-                    Menu {
-                        ForEach(options, id: \.self) { option in
-                            Button {
-                                selectedOption = option
-                            } label: {
-                                HStack {
-                                    Text(option)
-                                    Spacer()
-                                    if option == selectedOption {
-                                        Image(systemName: "checkmark")
-                                            .foregroundColor(.blue)
-                                    }
-                                }
-                            }
-                        }
-                    } label: {
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 25)
-                                .fill(Color.gray.opacity(0.1))
-                                .frame(width: 80, height: 80)   // Same size
-                            Image(systemName: "repeat")
-                                .foregroundColor(.green)
-                                .font(.title2) // Make it same size as other icons
-                        }
-                    }
-                    .frame(width: 80, height: 80) // <-- Important! Force the Menu itself to have same frame
+                } catch {
+                    print("Failed to fetch accounts: \(error.localizedDescription)")
                 }
 
-                 else {
-                    Text(key)
-                        .font(.title)
-                        .foregroundColor(.black)
+                if isEditing, let transaction = originalTransaction {
+                    amount = String(Int(transaction.amount))
+                    comment = transaction.comment
+                    selectedDate = transaction.date
+                    selectedCategory = transaction.selectedCategory
+                    selectedAccounts = transaction.account ?? accounts.first
                 }
             }
-        }
-    }
 
-    func handleInput(_ input: String) {
-        let digitCount = amount.filter { $0.isNumber }.count
-        
-        switch input {
-        case "*":
-            if !amount.isEmpty { amount.removeLast() }
-        case ".":
-            if !amount.contains(".") && amount.count < 12 {
-                amount += "."
-            }
-        case "add":
-            let newTransaction = TransactionModel(
-                comment: comment,
-                date: selectedDate,
-                amount: Double(amount) ?? 0.0,
-                selectedCategory: selectedCategory,
-                paymentType: selectedAccounts.name == "Cash" ? "Cash" : "Account",
-                account: selectedAccounts.name == "Cash" ? nil : selectedAccounts
-            )
-
-            context.insert(newTransaction)
-            do {
-                try context.save()
-                print("Transaction saved : \(amount), \(selectedCategory.name)")
-            } catch {
-                print("Error saving transaction: \(error.localizedDescription)")
-            }
-
-            
-            // ✅ Dismiss the sheet
-            onSave()
-
-            
-           
-        case "date":
-            showDatePicker = true
-        case "repeat":
-            print("Repeat Tapped")
-        default:
-            // check digits count except .
-            if digitCount < 12 , input.allSatisfy( {$0.isNumber}) {
-                if amount == "0" {
-                    amount = input
-                } else {
-                    amount += input
-                }
-            }
         }
     }
 }
@@ -345,7 +180,7 @@ struct CustomKeypadView: View {
 // MARK: - TransactionTypeToggle
 struct TransactionTypeToggle: View {
     @Binding var isIncome: Bool
-    
+
     var body: some View {
         HStack(spacing: 0) {
             Button(action: {
@@ -355,7 +190,7 @@ struct TransactionTypeToggle: View {
                     .font(.system(size: 20, weight: .bold))
                     .frame(width: 50, height: 40)
                     .foregroundColor(isIncome ? .gray : .white)
-                    .background(isIncome ?   Color.gray.opacity(0.3) : Color.red )
+                    .background(isIncome ? Color.gray.opacity(0.3) : Color.red)
             }
 
             Button(action: {
@@ -367,7 +202,6 @@ struct TransactionTypeToggle: View {
                     .foregroundColor(isIncome ? .white : .gray)
                     .background(isIncome ? Color.green : Color.gray.opacity(0.3))
                     .cornerRadius(12, corners: [.topRight, .bottomRight])
-
             }
         }
         .background(Color.gray.opacity(0.2))
@@ -403,7 +237,6 @@ struct RoundedCorner: Shape {
 
 // MARK: - Preview
 struct AddTransactionsManually_Previews: PreviewProvider {
-    
     static var previews: some View {
         Group {
             AddTransactionsManually()
@@ -414,4 +247,3 @@ struct AddTransactionsManually_Previews: PreviewProvider {
         }
     }
 }
-

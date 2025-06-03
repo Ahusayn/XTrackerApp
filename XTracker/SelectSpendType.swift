@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum SelectedSpendType: String, CaseIterable, Codable {
+enum SelectedSpendType: String, CaseIterable, Codable, Hashable {
     case expense = "Expense"
     case income = "Income"
 //    case balance = "Balance"
